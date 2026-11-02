@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<title>Team-Stintplan – OM Pitwall</title>
+<link rel="icon" href="../shared/brand/signet-dark.svg">
+<style>
+  /* Team-Seite: Stint-Plan und Live-Daten für das ganze Team (Bearbeiten- oder Ansichts-Link) */
+  @font-face { font-family: 'Pitwall Michroma'; src: url('../shared/fonts/Michroma-Regular.ttf') format('truetype'); font-weight: 400; font-display: swap; }
+  @font-face { font-family: 'Pitwall Barlow'; src: url('../shared/fonts/Barlow-Regular.ttf') format('truetype'); font-weight: 400; font-display: swap; }
+  @font-face { font-family: 'Pitwall Barlow'; src: url('../shared/fonts/Barlow-Medium.ttf') format('truetype'); font-weight: 500; font-display: swap; }
+  @font-face { font-family: 'Pitwall Barlow'; src: url('../shared/fonts/Barlow-SemiBold.ttf') format('truetype'); font-weight: 600; font-display: swap; }
+  @font-face { font-family: 'Pitwall Barlow'; src: url('../shared/fonts/Barlow-Bold.ttf') format('truetype'); font-weight: 700 900; font-display: swap; }
+  :root {
+    --bg: #0F1214; --bg2: #0B0E10; --panel: #181C20; --panel2: #232A30; --line: #2A3238; --line2: #3A434B;
+    --text: #E6E9EB; --mist: #8D969E; --dim: #6B747C;
+    --gold: #EBB626; --gold-pale: #F3D17A; --gain: #45D27A; --loss: #FF5F52; --view: #5BA8E0;
+    --font: "Pitwall Barlow", "Segoe UI", system-ui, sans-serif; --display: "Pitwall Michroma", "Pitwall Barlow", sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { background: var(--bg); color: var(--text); font: 16px/1.4 var(--font); min-height: 100vh; font-variant-numeric: tabular-nums; }
+  button, input, select { font: inherit; color: inherit; }
+  [hidden] { display: none !important; }
+  svg.i { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+  /* Kopf: Marke, Plan, Modus (Bearbeiten / Nur Ansicht), Verbindung */
+  .modebar { height: 5px; background: var(--dim); }
+  body.edit .modebar { background: var(--gold); }
+  body.view .modebar { background: var(--view); }
+  header { position: sticky; top: 0; z-index: 10; background: rgba(11,14,16,.94); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+  .hd { max-width: 1240px; margin: 0 auto; display: flex; align-items: center; gap: 16px; padding: 10px 16px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand svg { width: 18px; height: 20px; }
+  .brand img { height: 10px; display: block; }
+  .plan-t { min-width: 0; flex: 1; }
+  .plan-t small { display: block; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--mist); }
+  .plan-t b { display: block; font-family: var(--display); font-weight: 400; font-size: 17px; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mode { display: flex; align-items: center; gap: 10px; padding: 7px 14px 7px 10px; border: 1px solid; }
+  .mode svg { width: 22px; height: 22px; }
+  .mode b { display: block; font-family: var(--display); font-weight: 400; font-size: 13px; letter-spacing: .1em; }
+  .mode small { display: block; font-size: 12px; opacity: .85; }
+  .mode.edit { background: var(--gold); color: #0F1214; border-color: var(--gold); }
+  .mode.view { background: rgba(91,168,224,.12); color: var(--view); border-color: rgba(91,168,224,.6); }
+  .conn { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--mist); white-space: nowrap; }
+  .conn i { width: 9px; height: 9px; border-radius: 50%; background: var(--dim); }
+  .conn.ok i { background: var(--gain); box-shadow: 0 0 0 3px rgba(69,210,122,.18); }
+  .conn.bad i { background: var(--loss); }
+  .me-name { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--mist); }
+  .me-name input { width: 130px; background: var(--bg2); border: 1px solid var(--line); padding: 5px 8px; font-size: 14px; color: var(--text); }
+
+  main { max-width: 1240px; margin: 0 auto; padding: 16px 16px 60px; display: grid; gap: 16px; }
+  .block { background: var(--panel); border: 1px solid var(--line); padding: 14px 16px; min-width: 0; }
+  .block h2 { font-family: var(--display); font-weight: 400; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--mist); margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+  .block h2 .sp { flex: 1; }
+  .block h2 .fh { font-family: var(--font); text-transform: none; letter-spacing: 0; font-size: 12.5px; }
+  .hint { color: var(--mist); font-size: 14px; }
+  .fh { color: var(--dim); font-size: 12.5px; }
+  .btn { display: inline-flex; align-items: center; gap: 7px; background: var(--panel2); border: 1px solid var(--line2); padding: 7px 12px; cursor: pointer; font-size: 14px; color: var(--text); }
+  .btn:hover { border-color: var(--mist); }
+  .btn.sm { padding: 4px 9px; font-size: 13px; }
+  .btn.gold { background: var(--gold); color: #0F1214; border-color: var(--gold); font-weight: 700; }
+  .btn.danger { color: var(--loss); }
+  .btn svg { width: 15px; height: 15px; }
+
+  /* Wartet / Fehler */
+  .wait { text-align: center; padding: 60px 16px; }
+  .wait h1 { font-family: var(--display); font-weight: 400; font-size: 20px; letter-spacing: .06em; margin-bottom: 10px; }
+  .spin { width: 34px; height: 34px; margin: 0 auto 18px; border: 3px solid var(--line2); border-top-color: var(--gold); border-radius: 50%; animation: sp 1s linear infinite; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+
+  /* Live */
+  .live { display: grid; gap: 12px; }
+  .lv-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .lv-k { background: var(--loss); color: #fff; font-weight: 800; font-size: 12px; letter-spacing: .1em; padding: 2px 8px; }
+  .lv-k.off { background: var(--line2); color: var(--mist); }
+  .lv-k.demo { background: var(--gold); color: #0F1214; }
+  .lv-drv { font-size: 20px; font-weight: 700; }
+  .lv-sub { color: var(--mist); font-size: 14px; }
+  .lv-age { margin-left: auto; color: var(--dim); font-size: 13px; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .tile { background: var(--bg2); border: 1px solid var(--line); padding: 8px 10px; min-width: 0; }
+  .tile span { display: block; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--mist); }
+  .tile b { display: block; font-size: 22px; font-weight: 700; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tile small { display: block; color: var(--mist); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tile.hl { border-color: rgba(235,182,38,.6); background: rgba(235,182,38,.08); }
+  .tile.warn b { color: var(--loss); }
+  .bar { height: 5px; background: var(--panel2); margin-top: 6px; }
+  .bar i { display: block; height: 100%; background: var(--gold); }
+  .others { font-size: 13px; color: var(--mist); }
+
+  /* Kennzahlen */
+  .kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+
+  /* Stints */
+  .tbl-wrap { overflow-x: auto; margin: 0 -16px; padding: 0 16px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  th { text-align: left; font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--mist); font-weight: 600; padding: 6px 8px; border-bottom: 1px solid var(--line2); white-space: nowrap; }
+  td { padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; vertical-align: middle; }
+  td.r, th.r { text-align: right; }
+  td.c, th.c { text-align: center; }
+  td small { display: block; color: var(--mist); font-size: 12px; }
+  tr.cur td { background: rgba(235,182,38,.12); }
+  tr.cur td:first-child { box-shadow: inset 3px 0 0 var(--gold); }
+  tr.past td { opacity: .5; }
+  .drv { display: inline-flex; align-items: center; gap: 8px; }
+  .drv i { width: 4px; height: 18px; background: var(--dc, var(--gold)); flex: none; }
+  .evt { color: var(--loss); }
+  select.in, input.in { background: var(--bg2); border: 1px solid var(--line); padding: 4px 6px; color: var(--text); font-size: 14px; }
+  input.in.n { width: 64px; text-align: right; }
+  .man { border-color: var(--gold) !important; color: var(--gold-pale); }
+  input[type=checkbox] { width: 17px; height: 17px; accent-color: var(--gold); }
+
+  /* Ereignisse, Fahrer, Grundwerte */
+  .ev { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; align-items: end; padding: 10px; background: var(--bg2); border: 1px solid var(--line); margin-bottom: 8px; }
+  .ev label, .fld { display: grid; gap: 3px; font-size: 12px; color: var(--mist); }
+  .ev .in, .fld .in { width: 100%; }
+  .ev .chk, .chk { display: flex; align-items: center; gap: 7px; font-size: 13.5px; color: var(--text); }
+  .ev-ro { display: flex; gap: 12px; flex-wrap: wrap; align-items: baseline; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .ev-ro b { color: var(--loss); }
+  .drivers { display: grid; gap: 8px; }
+  .drow { display: flex; align-items: center; gap: 8px; }
+  .drow input[type=color] { width: 34px; height: 30px; padding: 0; border: 1px solid var(--line); background: none; }
+  .drow .in { flex: 1; }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px 14px; }
+  details summary { cursor: pointer; list-style: none; }
+  details summary::-webkit-details-marker { display: none; }
+  .two { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+  @media (max-width: 900px) { .two { grid-template-columns: minmax(0, 1fr); } .lv-age { margin-left: 0; } }
+  footer { max-width: 1240px; margin: 0 auto; padding: 0 16px 30px; color: var(--dim); font-size: 12.5px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--panel2); border: 1px solid var(--line2); padding: 9px 16px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 20; }
+  .toast.on { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="modebar"></div>
+<header>
+  <div class="hd">
+    <div class="brand"><svg viewBox="12 8 72 80" aria-hidden="true"><path d="M12 8H28V88H12Z" fill="#E6E9EB"/><path d="M36 8H84L74.76 24H36Z" fill="#EBB626"/></svg><img src="../shared/brand/wortmarke-paper.svg" alt="OM Pitwall"></div>
+    <div class="plan-t"><small>Team-Stintplan</small><b id="planName">–</b></div>
+    <label class="me-name" id="meName" hidden>Dein Name <input type="text" id="meInput" maxlength="40" placeholder="für «geändert von»"></label>
+    <div class="mode" id="mode"></div>
+    <div class="conn" id="conn"><i></i><span>Verbinde …</span></div>
+  </div>
+</header>
+<main id="main">
+  <div class="wait"><div class="spin"></div><h1>Verbinde mit dem Team …</h1><p class="hint">Der Stint-Plan wird geladen.</p></div>
+</main>
+<footer id="foot"></footer>
+<div class="toast" id="toast"></div>
+<script src="../shared/stintplan.js"></script>
+<script src="../shared/teamlink.js"></script>
+<script src="team.js"></script>
+</body>
+</html>

@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OM Pitwall</title>
+<meta name="description" content="OM Pitwall: Overlays, PIT Monitor, Stream-Szenen und Stint-Planer für iRacing in einer App. Kostenlos für Windows.">
+<link rel="icon" href="assets/brand/signet-dark.svg" type="image/svg+xml">
+<style>
+@font-face{font-family:"Michroma";src:url("assets/fonts/Michroma-Regular.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Barlow";src:url("assets/fonts/Barlow-Regular.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Barlow";src:url("assets/fonts/Barlow-Medium.ttf") format("truetype");font-weight:500;font-display:swap}
+@font-face{font-family:"Barlow";src:url("assets/fonts/Barlow-SemiBold.ttf") format("truetype");font-weight:600;font-display:swap}
+@font-face{font-family:"Barlow";src:url("assets/fonts/Barlow-Bold.ttf") format("truetype");font-weight:700;font-display:swap}
+
+:root{
+  /* Produktseite im Apple-Stil, Farben und Schriften aus dem OM-Pitwall-Brand-Manual.
+     Layout: zentrierte Kapitel, je ein grosser Titel und ein grosses Produktbild; dazwischen Kachel-Raster. */
+  --black:#000000;
+  --carbon:#0f1214;
+  --tile:#15191c;
+  --tile-hi:#1d2226;
+  --linie:#2a3137;
+  --nebel:#f2f3f4;
+  --dunst:#8d969e;
+  --gold:#ebb626;
+  --paper:#f4f5f6;
+  --ink:#0f1214;
+  --ink-soft:#535b62;
+  --gold-tief:#7a5c00;
+  --display:"Barlow","Helvetica Neue",Arial,sans-serif;
+  --wide:"Michroma","Arial",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--black);color:var(--nebel);font-family:var(--display);font-size:19px;line-height:1.47;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;letter-spacing:.005em}
+img{max-width:100%;height:auto;display:block}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:6px}
+h1,h2,h3{margin:0;font-weight:700;letter-spacing:-.015em;text-wrap:balance}
+p{margin:0}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+.wide{max-width:1440px;margin:0 auto;padding:0 24px}
+
+/* Navigation */
+.nav{position:sticky;top:0;z-index:50;background:rgba(0,0,0,.72);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid rgba(255,255,255,.08)}
+.nav .wrap{display:flex;align-items:center;height:52px;gap:28px}
+.nav .brand img{width:118px}
+.nav ul{display:flex;gap:26px;list-style:none;margin:0 0 0 auto;padding:0}
+.nav ul a{font-size:13px;color:#c9cdd1;transition:color .2s}
+.nav ul a:hover{color:#fff}
+.pill{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:980px;background:var(--gold);color:#111;font-weight:600;transition:background .2s,transform .2s}
+.pill:hover{background:#f4c63f}
+.pill.ghost{background:transparent;color:var(--gold);box-shadow:inset 0 0 0 1.5px var(--gold)}
+.pill.ghost:hover{background:rgba(235,182,38,.12)}
+.trio .more{margin-top:12px}
+.final .ctas{gap:14px}
+.pill.sm{font-size:13px;padding:5px 14px}
+.pill.lg{font-size:18px;padding:13px 26px}
+.pill svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.more{color:var(--gold);font-size:19px;display:inline-flex;align-items:center;gap:4px}
+.more:hover{text-decoration:underline}
+.more::after{content:"›";font-size:1.2em;line-height:1}
+@media (max-width:860px){.nav ul{display:none}.nav ul + .dc{margin-left:auto}}
+
+/* Kapitel */
+.chapter{padding:130px 0 0;text-align:center}
+.eyebrow{font-family:var(--wide);font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
+.headline{font-size:clamp(44px,7vw,88px);line-height:1.04}
+.sub{font-size:clamp(20px,2.2vw,26px);line-height:1.35;color:var(--dunst);max-width:30em;margin:22px auto 0;font-weight:500}
+.sub b{color:var(--nebel);font-weight:600}
+.ctas{display:flex;justify-content:center;align-items:center;gap:28px;flex-wrap:wrap;margin-top:34px}
+
+/* Hero */
+.hero{padding-top:110px;text-align:center;overflow:hidden}
+.hero .signet{width:64px;margin:0 auto 26px}
+.hero h1{font-size:clamp(56px,10vw,128px);line-height:.98;letter-spacing:-.025em}
+.hero h1 span{color:var(--gold)}
+.hero .ctas{margin-top:38px}
+.hero .ver{margin-top:16px;font-size:14px;color:var(--dunst)}
+.stage{margin-top:72px;position:relative}
+.stage::before{content:"";position:absolute;left:10%;right:10%;top:12%;bottom:-6%;background:radial-gradient(closest-side,rgba(235,182,38,.18),transparent);filter:blur(40px);z-index:0;pointer-events:none}
+.shot{position:relative;z-index:1;border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,.1);box-shadow:0 40px 120px -40px rgba(0,0,0,.9);background:var(--carbon)}
+
+/* Zahlen */
+.numbers{padding:120px 0 0}
+.numbers .row{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;text-align:center}
+.numbers strong{display:block;font-size:clamp(48px,6vw,80px);line-height:1;font-weight:700;letter-spacing:-.02em}
+.numbers strong.g{color:var(--gold)}
+.numbers span{display:block;margin-top:10px;font-size:17px;color:var(--dunst)}
+@media (max-width:760px){.numbers .row{grid-template-columns:1fr 1fr;row-gap:44px}}
+
+/* Bento */
+.bento{display:grid;grid-template-columns:repeat(6,1fr);gap:20px;margin-top:64px;text-align:left}
+.tile{background:var(--tile);border-radius:28px;padding:34px 34px 0;display:flex;flex-direction:column;overflow:hidden;min-height:100%}
+.tile h3{font-size:26px;line-height:1.15;margin-bottom:8px}
+.tile p{font-size:17px;color:var(--dunst);max-width:28em}
+.tile .art{flex:1;display:flex;align-items:flex-end;justify-content:center;padding:28px 0 34px}
+.tile .art.bleed{padding-bottom:0}
+.s2{grid-column:span 2}.s3{grid-column:span 3}.s4{grid-column:span 4}.s6{grid-column:span 6}
+.tile.big h3{font-size:clamp(28px,3vw,40px)}
+.tile.stat{justify-content:center;padding:34px;text-align:center}
+.tile.stat strong{font-size:84px;line-height:1;color:var(--gold);font-weight:700;letter-spacing:-.03em}
+.tile.stat p{margin:10px auto 0}
+@media (max-width:900px){.bento{grid-template-columns:1fr}.bento>*{grid-column:auto}}
+
+.chips{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:40px;max-width:900px;margin-left:auto;margin-right:auto}
+.chips span{font-size:15px;padding:8px 16px;border-radius:980px;background:var(--tile);color:#c9cdd1}
+
+/* Spalten mit Symbolen */
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:44px;margin-top:70px;text-align:left}
+.trio svg{width:34px;height:34px;stroke:var(--gold);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;margin-bottom:16px}
+.trio h3{font-size:21px;margin-bottom:6px}
+.trio p{font-size:17px;color:var(--dunst)}
+@media (max-width:820px){.trio{grid-template-columns:1fr;gap:34px}}
+
+/* Helles Kapitel */
+.light{background:var(--paper);color:var(--ink);padding-bottom:130px;margin-top:130px}
+.light .eyebrow{color:var(--gold-tief)}
+.light .sub{color:var(--ink-soft)}
+.light .sub b{color:var(--ink)}
+.light .trio svg{stroke:var(--gold-tief)}
+.light .trio p{color:var(--ink-soft)}
+.light .shot{border-color:rgba(0,0,0,.08);box-shadow:0 40px 90px -40px rgba(0,0,0,.45)}
+.light .more{color:var(--gold-tief)}
+
+/* Nebeneinander */
+.duo{display:grid;grid-template-columns:1.4fr 1fr;gap:20px;margin-top:64px;text-align:left;align-items:start}
+@media (max-width:900px){.duo{grid-template-columns:1fr}}
+
+/* Mehr drin */
+.extras{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:64px;text-align:left}
+.extras div{background:var(--tile);border-radius:24px;padding:30px}
+.extras svg{width:30px;height:30px;stroke:var(--gold);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;margin-bottom:18px}
+.extras h3{font-size:21px;margin-bottom:6px}
+.extras p{font-size:16px;color:var(--dunst)}
+@media (max-width:900px){.extras{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.extras{grid-template-columns:1fr}}
+
+/* Abschluss */
+.final{padding:150px 0 140px;text-align:center}
+.final .icon{width:120px;margin:0 auto 34px;border-radius:26px;overflow:hidden}
+.final .ver{margin-top:16px;font-size:14px;color:var(--dunst)}
+
+footer{border-top:1px solid var(--linie);padding:26px 0 40px;font-size:12px;color:#6e767d}
+footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+footer img{width:110px;opacity:.85}
+
+/* Community (Discord): Logo als Maske aus Simple Icons, Farben nach Discord-Vorgaben */
+.dc-logo{display:inline-block;width:1em;height:1em;background-color:currentColor;-webkit-mask:url("https://cdn.jsdelivr.net/npm/simple-icons@13.0.0/icons/discord.svg") center/contain no-repeat;mask:url("https://cdn.jsdelivr.net/npm/simple-icons@13.0.0/icons/discord.svg") center/contain no-repeat;flex:none}
+.community{padding:130px 0 0;text-align:center}
+.community .card{background:#5865f2;border-radius:32px;padding:72px 32px 64px;color:#fff;position:relative;overflow:hidden}
+.community .card .dc-logo.big{font-size:84px;margin-bottom:26px}
+.community .card h2{font-size:clamp(40px,6vw,72px);line-height:1.05}
+.community .card p{font-size:clamp(19px,2vw,23px);line-height:1.4;max-width:30em;margin:20px auto 0;color:rgba(255,255,255,.86);font-weight:500}
+.pill.discord{background:#fff;color:#5865f2}
+.pill.discord:hover{background:#eef0ff}
+.pill.discord .dc-logo{font-size:22px}
+.community .card .ctas{margin-top:36px}
+.community .card .link{display:block;margin-top:18px;font-size:15px;color:rgba(255,255,255,.75)}
+.nav .dc{display:inline-flex;align-items:center;color:#c9cdd1;font-size:20px;transition:color .2s}
+.nav .dc:hover{color:#fff}
+footer .dc{display:inline-flex;align-items:center;gap:8px;color:#c9cdd1;font-size:13px}
+footer .dc .dc-logo{font-size:18px}
+footer .dc:hover{color:#fff}
+.yt-logo{display:inline-block;width:1em;height:1em;background-color:currentColor;-webkit-mask:url("https://cdn.jsdelivr.net/npm/simple-icons@13.0.0/icons/youtube.svg") center/contain no-repeat;mask:url("https://cdn.jsdelivr.net/npm/simple-icons@13.0.0/icons/youtube.svg") center/contain no-repeat;flex:none}
+.nav .dc + .dc{margin-left:-12px}
+footer .social{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+footer .dc .yt-logo{font-size:18px}
+
+/* ===== Mockup: Elemente nach Vorbild racelab.app ===== */
+/* Overlay-Showcase */
+.showcase{margin-top:64px;text-align:left}
+.stage2{position:relative;aspect-ratio:16/9;border-radius:22px;overflow:hidden;background:#0b0d0f url("assets/shots/stage-bg.jpg") center/cover;border:1px solid rgba(255,255,255,.08)}
+.stage2::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.35));pointer-events:none}
+.stage2 .ov{position:absolute;z-index:1;filter:drop-shadow(0 20px 40px rgba(0,0,0,.5));transition:opacity .35s ease,transform .35s ease}
+.stage2 .ov.off{opacity:0;transform:translateY(10px)}
+.stage2 .count{position:absolute;z-index:2;left:22px;top:18px;font-family:var(--wide);font-size:13px;letter-spacing:.08em;color:#fff;background:rgba(0,0,0,.45);backdrop-filter:blur(8px);padding:7px 12px;border-radius:999px}
+.stage2 .count b{color:var(--gold);font-weight:400}
+.stage2 .nav2{position:absolute;z-index:2;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:0;background:rgba(0,0,0,.45);color:#fff;font-size:22px;cursor:pointer;backdrop-filter:blur(8px)}
+.stage2 .nav2:hover{background:rgba(0,0,0,.7)}
+.stage2 .prev{left:16px}.stage2 .next{right:16px}
+.picker{display:grid;grid-template-columns:repeat(8,1fr);gap:10px;margin-top:16px}
+.picker button{all:unset;cursor:pointer;background:var(--tile);border-radius:14px;padding:10px 8px 9px;display:flex;flex-direction:column;align-items:center;gap:8px;border:1px solid transparent;transition:border-color .2s,background .2s}
+.picker button:hover{background:var(--tile-hi)}
+.picker button[aria-selected="true"]{border-color:var(--gold)}
+.picker button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.picker .th{height:46px;width:100%;display:flex;align-items:center;justify-content:center}
+.picker .th img{max-height:46px;max-width:100%;object-fit:contain}
+.picker span{font-size:13px;font-weight:600;color:#c9cdd1;text-align:center;line-height:1.2}
+.picker button[aria-selected="true"] span{color:#fff}
+.desc{display:grid;grid-template-columns:1.2fr 1fr;gap:20px;margin-top:20px}
+.desc .card{background:var(--tile);border-radius:22px;padding:28px 30px}
+.desc h3{font-size:30px;margin:8px 0 10px}
+.desc .cat{display:flex;gap:8px;flex-wrap:wrap}
+.desc .cat span{font-size:12px;font-weight:600;letter-spacing:.04em;padding:4px 10px;border-radius:999px;background:rgba(235,182,38,.12);color:var(--gold)}
+.desc p{color:var(--dunst);font-size:17px}
+.desc ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
+.desc li{display:grid;grid-template-columns:22px 1fr;gap:10px;font-size:16px;color:#d5d9dc}
+.desc li::before{content:"";width:8px;height:8px;margin-top:8px;border-radius:50%;background:var(--gold)}
+.desc li b{color:#fff;font-weight:600}
+@media (max-width:900px){.picker{grid-template-columns:repeat(4,1fr)}.desc{grid-template-columns:1fr}}
+
+/* Nummerierte Markierungen */
+.annot{position:relative}
+.annot .m{position:absolute;z-index:2;transform:translate(-50%,-50%);width:30px;height:30px;border-radius:50%;background:var(--gold);border:2px solid #111;color:#111;font-weight:700;font-size:15px;display:grid;place-items:center;box-shadow:0 0 0 4px rgba(235,182,38,.28),0 6px 16px rgba(0,0,0,.5);transition:transform .2s}
+.annot .m.hi{transform:translate(-50%,-50%) scale(1.25)}
+.marks{list-style:none;margin:36px 0 0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:26px 36px;text-align:left}
+.marks li{display:grid;grid-template-columns:30px 1fr;gap:14px;align-items:start;cursor:default}
+.marks .n{width:30px;height:30px;border-radius:50%;background:var(--gold);color:#111;font-weight:700;font-size:15px;display:grid;place-items:center}
+.marks h3{font-size:19px;margin:3px 0 4px}
+.marks p{font-size:16px;color:var(--dunst)}
+@media (max-width:900px){.marks{grid-template-columns:1fr}}
+
+/* Hotspots */
+.hs{position:absolute;z-index:3;transform:translate(-50%,-50%);width:34px;height:34px;border-radius:50%;border:0;background:#fff;color:#111;font-size:22px;font-weight:600;line-height:1;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.hs::before{content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid rgba(255,255,255,.7);animation:ring 2.2s ease-out infinite}
+@keyframes ring{0%{transform:scale(.8);opacity:1}100%{transform:scale(1.5);opacity:0}}
+@media (prefers-reduced-motion:reduce){.hs::before{animation:none}}
+.hs[aria-expanded="true"]{background:var(--gold);transform:translate(-50%,-50%) rotate(45deg)}
+.hs[aria-expanded="true"]::before{display:none}
+.pop{position:absolute;z-index:4;width:290px;background:#fff;color:#111;border-radius:16px;padding:16px 18px;box-shadow:0 20px 50px rgba(0,0,0,.35);font-size:15px;line-height:1.45;text-align:left}
+.pop b{display:block;font-size:16px;margin-bottom:4px}
+.pop[hidden]{display:none}
+.hint{margin-top:16px;font-size:14px;color:var(--ink-soft)}
+
+/* Reiter */
+.tabs{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:var(--tile);margin-top:44px}
+.tabs button{all:unset;cursor:pointer;padding:9px 20px;border-radius:999px;font-size:15px;font-weight:600;color:#c9cdd1}
+.tabs button[aria-selected="true"]{background:var(--gold);color:#111}
+.tabs button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.tabpanel{margin-top:28px;display:grid;grid-template-columns:1.6fr 1fr;gap:20px;text-align:left;align-items:center}
+.tabpanel[hidden]{display:none}
+.tabpanel .txt h3{font-size:30px;margin-bottom:10px}
+.tabpanel .txt p{color:var(--dunst);font-size:17px}
+.tabpanel .txt ul{margin:18px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+.tabpanel .txt li{font-size:16px;color:#d5d9dc;padding-left:18px;position:relative}
+.tabpanel .txt li::before{content:"";position:absolute;left:0;top:9px;width:7px;height:7px;border-radius:50%;background:var(--gold)}
+.tabpanel .pic{border-radius:22px;overflow:hidden}
+.tabpanel .pic.ovbg{background:#0b0d0f url("assets/shots/stage-bg.jpg") center/cover;padding:34px;display:flex;justify-content:center}
+.tabpanel .pic.ovbg img{max-width:440px;filter:drop-shadow(0 20px 40px rgba(0,0,0,.5))}
+@media (max-width:900px){.tabpanel{grid-template-columns:1fr}}
+
+/* Einblenden beim Scrollen (nur was beim Laden ausserhalb des Bildschirms liegt) */
+.pre{opacity:0;transform:translateY(28px)}
+.reveal{transition:opacity .9s ease,transform .9s cubic-bezier(.2,.7,.2,1)}
+@media (prefers-reduced-motion:reduce){.pre{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<nav class="nav" aria-label="Hauptnavigation">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="OM Pitwall"><img src="assets/brand/lockup-dark.svg" alt="OM Pitwall"></a>
+    <ul>
+      <li><a href="#overlays">Overlays</a></li>
+      <li><a href="#layouts">Layouts</a></li>
+      <li><a href="#stream">Stream</a></li>
+      <li><a href="#pitmonitor">PIT Monitor</a></li>
+      <li><a href="#stintplaner">Stint-Planer</a></li>
+    </ul>
+    <a class="dc" href="https://discord.gg/qYybSH6v3e" target="_blank" rel="noopener" aria-label="OM Pitwall auf Discord" title="Discord-Community"><span class="dc-logo" aria-hidden="true"></span></a>
+    <a class="dc" href="https://www.youtube.com/@mischa.obrist" target="_blank" rel="noopener" aria-label="YouTube-Kanal von Mischa Obrist" title="YouTube"><span class="yt-logo" aria-hidden="true"></span></a>
+    <a class="pill sm js-dl" href="https://github.com/xdect/OM-Pitwall-Releases/releases/download/v1.4.105/OM-Pitwall-Setup-1.4.105.exe">Laden</a>
+  </div>
+</nav>
+
+<main id="top">
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap">
+    <img class="signet" src="assets/brand/signet-dark.svg" alt="">
+    <h1>Deine Boxenmauer.<br><span>Für iRacing.</span></h1>
+    <p class="sub">Overlays, PIT Monitor, Stream-Szenen und Stint-Planer. <b>In einer App. Kostenlos – für immer!</b></p>
+    <div class="ctas">
+      <a class="pill lg js-dl" href="https://github.com/xdect/OM-Pitwall-Releases/releases/download/v1.4.105/OM-Pitwall-Setup-1.4.105.exe">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Für Windows laden
+      </a>
+      <a class="more" href="#overlays">Funktionen ansehen</a>
+    </div>
+    <p class="ver">Version <span class="js-ver">1.4.105</span></p>
+  </div>
+  <div class="wide stage">
+    <div class="shot"><img src="assets/shots/app-overlays.jpg" alt="Hauptfenster von OM Pitwall mit der Übersicht der Overlays" width="2000" height="1250"></div>
+  </div>
+</section>
+
+<!-- ZAHLEN -->
+<section class="numbers" aria-label="Auf einen Blick">
+  <div class="wrap row">
+    <div><strong class="g">23</strong><span>Overlays fürs Cockpit</span></div>
+    <div><strong>3</strong><span>Layouts, je nach Session</span></div>
+    <div><strong>1</strong><span>PIT Monitor für die Box</span></div>
+    <div><strong>0.–</strong><span>Franken. Die App ist kostenlos.</span></div>
+  </div>
+</section>
+
+<!-- OVERLAYS -->
+<section class="chapter" id="overlays">
+  <div class="wrap">
+    <p class="eyebrow">Overlays</p>
+    <h2 class="headline">Ein Blick genügt.</h2>
+    <p class="sub">Wenige, grosse Werte direkt über iRacing. <b>Du bist immer im Fokus.</b> Violett ist die schnellste Runde im Feld, Grün deine persönliche Bestzeit.</p>
+
+    <div class="showcase">
+      <div class="stage2" id="stage">
+        <span class="count"><b id="cnt">01</b> / 08</span>
+        <img class="ov" id="ovImg" src="assets/shots/ov-relative.png" alt="Overlay Relative">
+        <button class="nav2 prev" id="prev" aria-label="Vorheriges Overlay">‹</button>
+        <button class="nav2 next" id="next" aria-label="Nächstes Overlay">›</button>
+      </div>
+      <div class="picker" role="tablist" aria-label="Overlay wählen" id="picker"></div>
+      <div class="desc">
+        <div class="card">
+          <div class="cat" id="ovCat"></div>
+          <h3 id="ovTitle">Relative</h3>
+          <p id="ovText"></p>
+        </div>
+        <div class="card"><ul id="ovPts"></ul></div>
+      </div>
+    </div>
+
+    <p class="sub" style="font-size:19px;margin-top:56px">Dazu 15 weitere Overlays:</p>
+    <div class="chips" aria-label="Weitere Overlays" style="margin-top:20px">
+      <span>Delta-Leiste</span><span>Flache Streckenkarte</span><span>Rundenzeiten</span><span>Rundenprotokoll</span><span>Rundenzeit-Grafik</span><span>Session-Timer</span><span>Session-Protokoll</span><span>Stint-Plan</span><span>Flaggen</span><span>Wettermonitor</span><span>Boxenplatz-Hilfe</span><span>G-Kraft</span><span>Fahrerkarte</span><span>Datenblock</span><span>Kilometerzähler</span><span>Live-Chat</span>
+    </div>
+  </div>
+</section>
+
+<!-- LAYOUTS -->
+<section class="chapter" id="layouts">
+  <div class="wrap">
+    <p class="eyebrow">Layouts</p>
+    <h2 class="headline">Dein Cockpit.<br>Pixelgenau.</h2>
+    <p class="sub">Ziehen, Grösse ändern, fertig. Der Editor zeigt deinen Monitor massstabsgetreu, <b>die Overlays über iRacing wandern sofort mit.</b></p>
+  </div>
+  <div class="wide stage">
+    <div class="shot annot" data-annot="lay">
+      <img src="assets/shots/app-layout-editor.jpg" alt="Layout-Editor von OM Pitwall" width="2000" height="1250" loading="lazy">
+      <span class="m" data-n="1" style="left:61.5%;top:9%">1</span>
+      <span class="m" data-n="2" style="left:15%;top:31%">2</span>
+      <span class="m" data-n="3" style="left:46%;top:44%">3</span>
+      <span class="m" data-n="4" style="left:76.5%;top:43%">4</span>
+      <span class="m" data-n="5" style="left:67.4%;top:9%">5</span>
+      <span class="m" data-n="6" style="left:40%;top:97%">6</span>
+    </div>
+  </div>
+  <div class="wrap">
+    <ol class="marks" data-for="lay">
+      <li data-n="1"><span class="n">1</span><div><h3>Session-Zuordnung</h3><p>Training, Qualifying und Rennen bekommen je ein Layout. OM Pitwall wechselt automatisch.</p></div></li>
+      <li data-n="2"><span class="n">2</span><div><h3>Overlay hinzufügen</h3><p>Alle 23 Overlays mit einem Klick ins Layout holen. Ein Häkchen zeigt, was schon drin ist.</p></div></li>
+      <li data-n="3"><span class="n">3</span><div><h3>Dein Bildschirm</h3><p>Massstabsgetreu. Ziehen verschiebt, der Eck-Griff ändert die Grösse, Pfeiltasten verschieben pixelgenau.</p></div></li>
+      <li data-n="4"><span class="n">4</span><div><h3>Overlay-Steuerung</h3><p>Ein- und ausblenden, Einstellungen öffnen oder entfernen. Bei mehreren Monitoren wählst du hier den Bildschirm.</p></div></li>
+      <li data-n="5"><span class="n">5</span><div><h3>Demo-Modus</h3><p>Ohne iRacing ein GT3-Rennen simulieren, im Auto oder in der Box. Ideal zum Einrichten.</p></div></li>
+      <li data-n="6"><span class="n">6</span><div><h3>Positionieren</h3><p>Die Overlays erscheinen direkt über deinem Spiel. Fertig positioniert, gesperrt, losfahren.</p></div></li>
+    </ol>
+  </div>
+</section>
+
+<!-- STREAM (hell) -->
+<section class="chapter light" id="stream">
+  <div class="wrap">
+    <p class="eyebrow">Stream</p>
+    <h2 class="headline">Sendefertig.<br>Ohne Grafiker.</h2>
+    <p class="sub">Bau ganze Szenen in der Grösse deines Streams und bind sie in OBS ein. <b>Jede Änderung ist sofort live.</b></p>
+  </div>
+  <div class="wide stage">
+    <div class="shot annot" data-hs>
+      <img src="assets/shots/app-stream.jpg" alt="Stream-Editor von OM Pitwall mit Leinwand 2560 mal 1440" width="2000" height="1250" loading="lazy">
+      <button class="hs" style="left:74.8%;top:10.5%" aria-expanded="false" aria-controls="p1" aria-label="Leinwand-Grösse">+</button>
+      <div class="pop" id="p1" hidden style="left:56%;top:15%"><b>Grösse wie in OBS</b>Die Leinwand hat genau die Auflösung deines Streams, zum Beispiel 2560 × 1440. Was du hier siehst, sieht dein Publikum.</div>
+      <button class="hs" style="left:45%;top:14.5%" aria-expanded="false" aria-controls="p2" aria-label="Zeigen bei">+</button>
+      <div class="pop" id="p2" hidden style="left:30%;top:20%"><b>Zeigen bei</b>Jede Szene erscheint nur in den Session-Arten, die du ankreuzt. Im Training anders als im Rennen.</div>
+      <button class="hs" style="left:40%;top:50%" aria-expanded="false" aria-controls="p3" aria-label="Leinwand">+</button>
+      <div class="pop" id="p3" hidden style="left:42%;top:52%"><b>Frei platzieren</b>Rennstand, Relative, Delta und Telemetrie per Ziehen anordnen. Mit Umschalttaste in 10er-Schritten.</div>
+      <button class="hs" style="left:96.7%;top:20.8%" aria-expanded="false" aria-controls="p4" aria-label="Ebenen">+</button>
+      <div class="pop" id="p4" hidden style="left:74%;top:26%"><b>Ebenen</b>Oben liegt vorne. Das Auge blendet ein Element nur im Editor aus, in OBS bleibt es sichtbar.</div>
+      <button class="hs" style="left:50%;top:80.5%" aria-expanded="false" aria-controls="p5" aria-label="OBS-Adresse">+</button>
+      <div class="pop" id="p5" hidden style="left:35%;top:58%"><b>In OBS einbinden</b>Adresse kopieren, in OBS als Browser-Quelle einfügen, fertig. Der Hintergrund ist durchsichtig, Änderungen erscheinen sofort.</div>
+    </div>
+    <p class="hint" style="text-align:center">Tippe auf ein <b>+</b>, um mehr zu erfahren.</p>
+  </div>
+  <div class="wrap">
+    <div class="trio">
+      <div>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>
+        <h3>Für OBS gemacht</h3>
+        <p>Jede Szene hat eine eigene Adresse für die Browser-Quelle. Hintergrund durchsichtig.</p>
+      </div>
+      <div>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <h3>Live-Chat</h3>
+        <p>Der Chat deines Streams als eigenes Element, im Spiel und auf der Leinwand.</p>
+      </div>
+      <div>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        <h3>Stream Deck</h3>
+        <p>Layouts wechseln, Overlays sperren und Werte anzeigen direkt vom Elgato Stream Deck.</p>
+        <a class="more js-sd" href="https://github.com/xdect/OM-Pitwall-Releases/releases/latest/download/OM-Pitwall.streamDeckPlugin" download>Plugin laden</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PIT MONITOR -->
+<section class="chapter" id="pitmonitor">
+  <div class="wrap">
+    <p class="eyebrow">PIT Monitor</p>
+    <h2 class="headline">Die Box.<br>Auf deinem zweiten Bildschirm.</h2>
+    <p class="sub">Zeitentabelle mit allen Klassen, Sektoren und Boxenstopps. <b>Trackmap, Circle of Doom und Wetter ordnest du frei darum herum.</b></p>
+  </div>
+  <div class="wide stage">
+    <div class="shot annot" data-annot="pit">
+      <img src="assets/shots/pit-monitor.jpg" alt="PIT Monitor von OM Pitwall mit Zeitentabelle, Trackmap, Circle of Doom und Wetter, getrennt durch goldene Trenner" width="2000" height="1125" loading="lazy">
+      <span class="m" data-n="1" style="left:10%;top:8.3%">1</span>
+      <span class="m" data-n="2" style="left:45%;top:11%">2</span>
+      <span class="m" data-n="3" style="left:22%;top:54.6%">3</span>
+      <span class="m" data-n="4" style="left:57%;top:2.2%">4</span>
+      <span class="m" data-n="5" style="left:64.6%;top:36%">5</span>
+      <span class="m" data-n="6" style="left:92%;top:20%">6</span>
+      <span class="m" data-n="7" style="left:92%;top:52%">7</span>
+      <span class="m" data-n="8" style="left:4%;top:94.6%">8</span>
+    </div>
+  </div>
+  <div class="wrap">
+    <ol class="marks" data-for="pit">
+      <li data-n="1"><span class="n">1</span><div><h3>Klassen</h3><p>GTP, LMP2 und GT3 getrennt, jede mit eigenem Leader und eigener Stärke des Feldes.</p></div></li>
+      <li data-n="2"><span class="n">2</span><div><h3>Sektoren in Farbe</h3><p>Violett ist die schnellste Zeit im Feld, Grün eine persönliche Bestzeit.</p></div></li>
+      <li data-n="3"><span class="n">3</span><div><h3>Du, immer im Fokus</h3><p>Deine Zeile ist immer hervorgehoben. Ein Klick auf einen Fahrer schaltet die iRacing-Kamera auf ihn.</p></div></li>
+      <li data-n="4"><span class="n">4</span><div><h3>Boxenstopps</h3><p>Anzahl Stopps, Runde und Standzeit für jedes Auto im Feld.</p></div></li>
+      <li data-n="5"><span class="n">5</span><div><h3>Trenner</h3><p>Linien zwischen den Elementen, auf Wunsch leuchtend. Sie verbinden sich selbst zu Ecken und T-Stücken.</p></div></li>
+      <li data-n="6"><span class="n">6</span><div><h3>Trackmap</h3><p>Alle Autos live auf der Strecke, mit Kurvennummern und Fahrerkürzeln.</p></div></li>
+      <li data-n="7"><span class="n">7</span><div><h3>Circle of Doom</h3><p>Wo du nach dem Stopp wieder rauskommst, mit dem Auto vor und hinter dir.</p></div></li>
+      <li data-n="8"><span class="n">8</span><div><h3>Streckenband</h3><p>Das ganze Feld auf einer Linie. Lücken und Pulks auf einen Blick.</p></div></li>
+    </ol>
+  </div>
+</section>
+
+<!-- STINT-PLANER -->
+<section class="chapter" id="stintplaner">
+  <div class="wrap">
+    <p class="eyebrow">Stint-Planer</p>
+    <h2 class="headline">24 Stunden.<br>Durchgerechnet.</h2>
+    <p class="sub">Renndauer, Verbrauch und Fahrer eintragen. OM Pitwall plant Stints, Stopps, Reifen und Fahrerwechsel. <b>Und rechnet im Rennen live mit.</b></p>
+    <div class="tabs" role="tablist" aria-label="Stint-Planer Ansichten">
+      <button role="tab" id="t1" aria-selected="true" aria-controls="tp1">Planen</button>
+      <button role="tab" id="t2" aria-selected="false" aria-controls="tp2" tabindex="-1">Im Rennen</button>
+      <button role="tab" id="t3" aria-selected="false" aria-controls="tp3" tabindex="-1">Im Spiel</button>
+    </div>
+    <div class="tabpanel" role="tabpanel" id="tp1" aria-labelledby="t1">
+      <div class="pic shot"><img src="assets/shots/app-stintplaner.jpg" alt="Stint-Planer mit 8 Stints und 7 Boxenstopps" width="2000" height="1250" loading="lazy"></div>
+      <div class="txt"><h3>Einmal eintragen</h3><p>Renndauer, Rundenzeit, Verbrauch und Tankgrösse festlegen, Fahrer eintragen. Den Rest rechnet OM Pitwall.</p>
+        <ul><li>Stints, Stopps und Tankmengen</li><li>Reifenwechsel jeder zweite Stopp oder nach Wahl</li><li>Fahrer pro Stint frei zuweisen</li></ul></div>
+    </div>
+    <div class="tabpanel" role="tabpanel" id="tp2" aria-labelledby="t2" hidden>
+      <div class="pic shot"><img src="assets/shots/app-stintplaner.jpg" alt="Live-Leiste im Stint-Planer" width="2000" height="1250" loading="lazy" style="object-fit:cover;object-position:50% 33%;aspect-ratio:16/7"></div>
+      <div class="txt"><h3>Live mitgerechnet</h3><p>Die Live-Leiste zeigt Stint, Fahrer am Steuer, nächsten Stopp und den nächsten Fahrerwechsel.</p>
+        <ul><li>«Gegenüber Plan» in Runden</li><li>Schaden, Strafe oder Dreher als Ereignis erfassen</li><li>Alle folgenden Stints verschieben sich</li></ul></div>
+    </div>
+    <div class="tabpanel" role="tabpanel" id="tp3" aria-labelledby="t3" hidden>
+      <div class="pic ovbg"><img src="assets/shots/ov-stints.png" alt="Overlay Stint-Plan" loading="lazy"></div>
+      <div class="txt"><h3>Immer im Blick</h3><p>Das Overlay «Stint-Plan» zeigt den aktiven Plan im Spiel, im Stream und im PIT Monitor.</p>
+        <ul><li>Nächster Stopp mit Runde und Tankmenge</li><li>Nächster Fahrerwechsel</li><li>Hinweis, wenn der falsche Fahrer fährt</li></ul></div>
+    </div>
+    <div class="trio">
+      <div>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+        <h3>Mit dem Team teilen</h3>
+        <p>Ein Link zum Bearbeiten, einer zum Ansehen. Ende-zu-Ende verschlüsselt, ohne Konto.</p>
+      </div>
+      <div>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+        <h3>Wenn es anders kommt</h3>
+        <p>Schaden, Strafe oder Dreher als Ereignis erfassen. Alle folgenden Stints verschieben sich.</p>
+      </div>
+      <div>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>
+        <h3>Fürs Briefing</h3>
+        <p>Den Plan als PDF exportieren und vor dem Start mit allen durchgehen.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MEHR DRIN -->
+<section class="chapter">
+  <div class="wrap">
+    <h2 class="headline" style="font-size:clamp(36px,5vw,64px)">Und noch mehr drin.</h2>
+    <div class="extras">
+      <div>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg>
+        <h3>Session-Berichte</h3>
+        <p>Jede Session wird aufgezeichnet, mit Auswertung pro Runde und Export als PDF oder CSV.</p>
+      </div>
+      <div>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><path d="M7.5 7.5h.01"/></svg>
+        <h3>Fahrer markieren</h3>
+        <p>Rivalen und saubere Fahrer markieren. Die Markierung erscheint in Relative, Rennstand und PIT Monitor.</p>
+      </div>
+      <div>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2a10 10 0 1 0 0 20c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2h2.3A4.7 4.7 0 0 0 22 10.7C22 5.8 17.5 2 12 2z"/></svg>
+        <h3>Deine Farben</h3>
+        <p>Vorlagen wie OM Gold, Rennrot, Papaya oder Eisblau, oder ganz eigene Farben.</p>
+      </div>
+      <div>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+        <h3>40 bis 300 %</h3>
+        <p>Jedes Overlay in der Grösse, die zu deinem Monitor passt. Am Griff ziehen oder Mausrad drehen.</p>
+      </div>
+      <div>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3l14 9-14 9V3z"/></svg>
+        <h3>Demo-Modus</h3>
+        <p>Ohne iRacing ein GT3-Rennen simulieren. Ideal, um Overlays und OBS einzurichten.</p>
+      </div>
+      <div>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+        <h3>Automatische Updates</h3>
+        <p>Neue Versionen kommen von selbst. Du fährst immer mit dem neuesten Stand.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMMUNITY -->
+<section class="community" id="community">
+  <div class="wrap">
+    <div class="card">
+      <span class="dc-logo big" aria-hidden="true"></span>
+      <h2>Tritt der Community bei.</h2>
+      <p>Fragen stellen, Layouts teilen, Ideen für neue Funktionen einbringen und mit anderen Fahrern und Teams fachsimpeln. Auf dem Discord-Server von OM Pitwall.</p>
+      <div class="ctas">
+        <a class="pill lg discord" href="https://discord.gg/qYybSH6v3e" target="_blank" rel="noopener"><span class="dc-logo" aria-hidden="true"></span>Discord beitreten</a>
+      </div>
+      <span class="link">discord.gg/qYybSH6v3e</span>
+    </div>
+  </div>
+</section>
+
+<!-- ABSCHLUSS -->
+<section class="final" id="download">
+  <div class="wrap">
+    <img class="icon" src="assets/brand/app-icon.svg" alt="App-Icon von OM Pitwall">
+    <h2 class="headline">Bereit für den<br>nächsten Stint.</h2>
+    <p class="sub">OM Pitwall ist kostenlos und läuft unter Windows neben iRacing.</p>
+    <div class="ctas">
+      <a class="pill lg js-dl" href="https://github.com/xdect/OM-Pitwall-Releases/releases/download/v1.4.105/OM-Pitwall-Setup-1.4.105.exe">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Für Windows laden
+      </a>
+      <a class="pill lg ghost js-sd" href="https://github.com/xdect/OM-Pitwall-Releases/releases/latest/download/OM-Pitwall.streamDeckPlugin" download>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Stream-Deck-Plugin
+      </a>
+    </div>
+    <p class="ver">Version <span class="js-ver">1.4.105</span> · Setup für Windows · Plugin für die Elgato-Stream-Deck-Software (Doppelklick installiert es)</p>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <img src="assets/brand/lockup-dark.svg" alt="OM Pitwall">
+    <div class="social">
+      <a class="dc" href="https://discord.gg/qYybSH6v3e" target="_blank" rel="noopener"><span class="dc-logo" aria-hidden="true"></span>Discord-Community</a>
+      <a class="dc" href="https://www.youtube.com/@mischa.obrist" target="_blank" rel="noopener"><span class="yt-logo" aria-hidden="true"></span>YouTube</a>
+    </div>
+    <p>Für iRacing. iRacing ist eine Marke von iRacing.com Motorsport Simulations, LLC. OM Pitwall ist kein offizielles iRacing-Produkt. Discord ist eine Marke von Discord Inc., YouTube eine Marke von Google LLC.</p>
+  </div>
+</footer>
+
+<script>
+/* Download-Knöpfe zeigen immer auf das Setup der neuesten Version (Fallback: fester Link im HTML) */
+(function(){
+  fetch('https://api.github.com/repos/xdect/OM-Pitwall-Releases/releases/latest',{headers:{'Accept':'application/vnd.github+json'}})
+    .then(function(r){return r.ok?r.json():null})
+    .then(function(rel){
+      if(!rel||!rel.assets)return;
+      var a=rel.assets.find(function(x){return /^OM-Pitwall-Setup-[\d.]+\.exe$/.test(x.name)})||rel.assets.find(function(x){return /Setup.*\.exe$/.test(x.name)});
+      if(!a)return;
+      document.querySelectorAll('.js-dl').forEach(function(el){el.href=a.browser_download_url});
+      var sd=rel.assets.find(function(x){return /\.streamDeckPlugin$/.test(x.name)});
+      if(sd)document.querySelectorAll('.js-sd').forEach(function(el){el.href=sd.browser_download_url});
+      var v=(rel.tag_name||'').replace(/^v/,'');
+      if(v)document.querySelectorAll('.js-ver').forEach(function(el){el.textContent=v});
+    })
+    .catch(function(){});
+})();
+/* Overlay-Showcase */
+(function(){
+  var O=[
+    {f:'relative',t:'Relative',c:['Rennen','Fahren'],x:'Wer vor und hinter dir fährt, auf der Strecke statt in der Wertung. Damit du weisst, ob du angreifen oder verteidigen musst.',p:[['Abstand in Sekunden','vor dir rot, hinter dir grün'],['Lizenz und iRating','für jedes Auto um dich herum'],['Rundenstatus','überrundet, Box, Flaggen']],pos:{l:'50%',t:'50%',w:'62%'}},
+    {f:'standings',t:'Rennstand',c:['Rennen','Strategie'],x:'Die ganze Wertung deiner Klasse, mit Abständen und Rundenzeiten. Für den Überblick in der Geraden.',p:[['Positionen und Abstände','zum Leader und zum Vordermann'],['Letzte und beste Runde','schnellste Runde in Violett'],['Boxen-Markierung','wer gerade in der Box ist']],pos:{l:'50%',t:'50%',w:'70%'}},
+    {f:'fuel',t:'Spritrechner',c:['Strategie'],x:'Wann du rein musst und wie viel du tanken sollst. Rechnet mit deinem echten Verbrauch.',p:[['Boxenfenster','offen ab Runde x bis y'],['Verbrauch','Durchschnitt, Maximum, Minimum'],['Tankmenge','genau so viel wie bis ins Ziel nötig']],pos:{l:'50%',t:'45%',w:'62%'}},
+    {f:'cod',t:'Circle of Doom',c:['Strategie'],x:'Zeigt vor dem Stopp, auf welcher Position und zwischen wem du wieder rauskommst.',p:[['Prognose','Position nach dem Stopp'],['Vor und hinter dir','mit Abstand in Sekunden'],['Gemessen','Zeitverlust aus echten Stopps je Strecke']],pos:{l:'50%',t:'50%',w:'36%'}},
+    {f:'trackmap',t:'Trackmap',c:['Fahren','Rennen'],x:'Alle Autos live auf der Strecke. Langsame Autos, Unfälle und Pulks siehst du, bevor du dort bist.',p:[['Klassenfarben','jede Klasse in ihrer Farbe'],['Kurvennummern','zum Ansagen im Team'],['Du, immer im Fokus','dein Auto ist immer hervorgehoben']],pos:{l:'50%',t:'50%',w:'52%'}},
+    {f:'inputs',t:'Eingabe-Telemetrie',c:['Fahren'],x:'Gas, Bremse, Gang und Tempo als ruhige Spur. Ideal, um Bremspunkte und Traktion zu üben.',p:[['Pedalspur','Gas grün, Bremse rot'],['Gang und Tempo','gross und gut lesbar'],['Balkenanzeige','für schnelle Blicke']],pos:{l:'50%',t:'72%',w:'52%'}},
+    {f:'delta',t:'Delta',c:['Fahren'],x:'Schneller oder langsamer als deine Bestzeit, noch während der Runde.',p:[['Delta live','grün schneller, rot langsamer'],['Prognose','voraussichtliche Rundenzeit'],['Bestzeit','als Referenz daneben']],pos:{l:'50%',t:'18%',w:'54%'}},
+    {f:'stints',t:'Stint-Plan',c:['Strategie','Langstrecke'],x:'Der aktive Stint-Plan im Spiel. Nächster Stopp und nächster Fahrerwechsel, ohne nachzufragen.',p:[['Nächster Stopp','Runde, Uhrzeit, Tankmenge'],['Fahrerwechsel','wer als Nächstes fährt'],['Warnung','wenn der falsche Fahrer im Auto sitzt']],pos:{l:'50%',t:'50%',w:'40%'}}
+  ];
+  var picker=document.getElementById('picker'),img=document.getElementById('ovImg'),cur=0;
+  O.forEach(function(o,i){
+    var b=document.createElement('button');b.setAttribute('role','tab');b.setAttribute('aria-selected',i===0?'true':'false');
+    b.innerHTML='<div class="th"><img src="assets/shots/ov-'+o.f+'.png" alt=""></div><span>'+o.t+'</span>';
+    b.onclick=function(){show(i)};picker.appendChild(b);
+  });
+  function show(i){
+    cur=(i+O.length)%O.length;var o=O[cur];
+    [].forEach.call(picker.children,function(b,k){b.setAttribute('aria-selected',k===cur?'true':'false')});
+    img.classList.add('off');
+    setTimeout(function(){
+      img.src='assets/shots/ov-'+o.f+'.png';img.alt='Overlay '+o.t;
+      img.style.left=o.pos.l;img.style.top=o.pos.t;img.style.width=o.pos.w;img.style.transform='translate(-50%,-50%)';
+      img.classList.remove('off');
+    },180);
+    document.getElementById('cnt').textContent=String(cur+1).padStart(2,'0');
+    document.getElementById('ovTitle').textContent=o.t;
+    document.getElementById('ovText').textContent=o.x;
+    document.getElementById('ovCat').innerHTML=o.c.map(function(c){return '<span>'+c+'</span>'}).join('');
+    document.getElementById('ovPts').innerHTML=o.p.map(function(p){return '<li><div><b>'+p[0]+'</b><br>'+p[1]+'</div></li>'}).join('');
+  }
+  document.getElementById('prev').onclick=function(){show(cur-1)};
+  document.getElementById('next').onclick=function(){show(cur+1)};
+  img.style.position='absolute';
+  show(0);
+})();
+/* Nummerierte Markierungen: Liste und Bild verbinden */
+document.querySelectorAll('.marks').forEach(function(ol){
+  var box=document.querySelector('[data-annot="'+ol.dataset.for+'"]');
+  ol.querySelectorAll('li').forEach(function(li){
+    function hi(on){var m=box.querySelector('.m[data-n="'+li.dataset.n+'"]');if(m)m.classList.toggle('hi',on)}
+    li.addEventListener('mouseenter',function(){hi(true)});li.addEventListener('mouseleave',function(){hi(false)});
+  });
+});
+/* Hotspots */
+document.querySelectorAll('[data-hs] .hs').forEach(function(b){
+  b.addEventListener('click',function(){
+    var open=b.getAttribute('aria-expanded')==='true';
+    document.querySelectorAll('[data-hs] .hs').forEach(function(x){x.setAttribute('aria-expanded','false');document.getElementById(x.getAttribute('aria-controls')).hidden=true});
+    if(!open){b.setAttribute('aria-expanded','true');document.getElementById(b.getAttribute('aria-controls')).hidden=false}
+  });
+});
+/* Reiter */
+(function(){
+  var tabs=[].slice.call(document.querySelectorAll('.tabs [role="tab"]'));
+  function sel(t){tabs.forEach(function(x){var on=x===t;x.setAttribute('aria-selected',on);x.tabIndex=on?0:-1;document.getElementById(x.getAttribute('aria-controls')).hidden=!on});t.focus()}
+  tabs.forEach(function(t,i){t.onclick=function(){sel(t)};t.onkeydown=function(e){if(e.key==='ArrowRight')sel(tabs[(i+1)%tabs.length]);if(e.key==='ArrowLeft')sel(tabs[(i-1+tabs.length)%tabs.length])}});
+})();
+/* Sanftes Einblenden: nur Elemente unterhalb des ersten Bildschirms */
+(function(){
+  if(!('IntersectionObserver' in window)||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  var els=document.querySelectorAll('.chapter .headline,.chapter .sub,.stage .shot,.tile,.trio>div,.extras>div,.numbers .row>div,.final .wrap>*');
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.remove('pre');io.unobserve(e.target)}})},{rootMargin:'0px 0px -8% 0px'});
+  els.forEach(function(el){
+    if(el.closest('.hero'))return;
+    if(el.getBoundingClientRect().top<innerHeight)return;
+    el.classList.add('pre','reveal');io.observe(el);
+  });
+})();
+</script>
+</body>
+</html>
